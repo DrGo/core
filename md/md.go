@@ -33,7 +33,7 @@ func InlinedMdToHTML(md string, opts *InlinedMdToHTMLOptions) ([]byte, error) {
 	formats := make(stacks.IntStack, 0, 100)
 	mdLen := len(md)
 	if mdLen == 0 {
-		return []byte{}, 0
+		return []byte{}, nil
 	}
 	html := make([]byte, mdLen*3)
 	i := 0                          // is the source (md) byte index
