@@ -32,7 +32,7 @@ type Flag struct {
 	value  interface{}
 }
 
-// NewFlag returns a new Flag struc
+// NewFlag returns a new Flag struct
 func NewFlag(destination interface{}, name, letter string) Flag {
 	return Flag{
 		dest:   destination,
