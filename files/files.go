@@ -91,20 +91,33 @@ func GetTempWriter(fileName string) (*os.File, error) {
 	return out, nil
 }
 
-func WriteBufferToFile(fileName string, buf []byte, overWrite bool) (err error) {
-	file, err := ioutil.TempFile("", "rwtmp") //create in the system default temp folder, a file prefixed with
-	defer func() {
-		err = CloseAndRename(file, fileName, overWrite)
-	}()
+// WriteBufferToFile atomically writes a byte array into fileName. fileName can be "" in which case
+// a temp file is created and its name is returned
+func WriteBufferToFile(fileName string, buf []byte, overWrite bool) (usedFileName string, err error) {
+	file, err := ioutil.TempFile("", "rwtmp") //created in the system default temp folder
 	if err != nil {
-		return err
+		return "", err
 	}
+
+	defer func() {
+		if err != nil {
+			_ = file.Close()  // attempt to close the file ignoring any errors &
+			usedFileName = "" // return original error and empty usedFileName
+		} else {
+			usedFileName = fileName
+			if usedFileName == "" {
+				usedFileName = file.Name()
+			}
+			err = CloseAndRename(file, usedFileName, overWrite)
+		}
+	}()
+
 	w := bufio.NewWriter(file)
 	_, err = w.Write(buf)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return w.Flush()
+	return "", w.Flush() // return vars will be overwritten by the deferred func
 }
 
 // Copyright 2018 The Go Authors. All rights reserved.

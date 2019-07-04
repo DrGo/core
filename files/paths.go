@@ -10,20 +10,14 @@ import (
 	"strings"
 )
 
-//TODO: change to getting exe file dir
-func GetAppDir() string {
+//GetExeDir returns exe dir
+// may fail if exe invoked through symlink see Executable() docs
+func GetExeDir() (string, error) {
 	dir, err := os.Executable()
 	if err != nil {
-		return ""
+		return "", err
 	}
-	return filepath.Dir(dir)
-}
-
-func Iif(condition bool, t, f interface{}) interface{} {
-	if condition {
-		return t
-	}
-	return f
+	return filepath.Dir(dir), nil
 }
 
 func BaseNameNoExt(path string) string {
@@ -36,7 +30,7 @@ func BaseNameNoExt(path string) string {
 }
 
 //ConstructFileName if called with "dir/filename", ".newext", "prefix" , "postfix". it returns
-//os-approproate name "dir/prefixfilenamepostfix.newext"
+//os-appropriate name "dir/prefixfilenamepostfix.newext"
 func ConstructFileName(path, newExt, prefix, postfix string) string {
 	//TODO: validate
 	dir := filepath.Dir(path)
@@ -67,6 +61,7 @@ func GetFullPath(fileName string) (string, error) {
 	return filepath.Join(path, fileName), nil
 }
 
+// ReplaceFileExt returns fileName with extension replace with newExt (both ext and .ext are ok)
 func ReplaceFileExt(fileName, newExt string) string {
 	ext := path.Ext(fileName)
 	newExt = strings.Trim(newExt, ".")
@@ -108,6 +103,14 @@ func CheckTextStream(r io.Reader, streamMinSize int) error {
 	default:
 		return nil
 	}
+}
+
+func FileExists(path string) bool {
+	info, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }
 
 // func FileCompare(file1, file2 string) (error, bool) {
