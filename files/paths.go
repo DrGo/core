@@ -3,6 +3,7 @@ package files
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -59,6 +60,26 @@ func GetFullPath(fileName string) (string, error) {
 		return "", err
 	}
 	return filepath.Join(path, fileName), nil
+}
+
+//GetOutputDir returns dirname or current working directory if preserveTempFiles is true
+// otherwise creates a temp dir as per os defaults and return its name
+func GetOutputDir(dirName string, preserveTempFiles bool) (dir string, temp bool, err error) {
+	dir = strings.TrimSpace(dirName)
+	if preserveTempFiles { //save in workDir or currentDir if workDir is null
+		if dir != "" {
+			return dir, false, nil
+		}
+		if dir, err = os.Getwd(); err != nil {
+			return "", false, err
+		}
+		return dir, false, nil
+	}
+	// if preserveTempFiles is false, create temp folder and return
+	if dir, err = ioutil.TempDir("", "rw-temp101"); err != nil { //create temp dir in the os default temp dir
+		return "", false, err
+	}
+	return dir, true, nil
 }
 
 // ReplaceFileExt returns fileName with extension replace with newExt (both ext and .ext are ok)

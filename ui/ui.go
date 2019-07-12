@@ -21,6 +21,7 @@ type UI interface {
 	Log(a ...interface{})
 	Logf(format string, a ...interface{})
 	Info(a ...interface{})
+	Infof(format string, a ...interface{})
 	Warn(a ...interface{})
 	Level() int
 	SetLevel(level int)
@@ -36,6 +37,10 @@ func NewUI(debug int) UI {
 	return &ui{
 		debug: debug,
 	}
+}
+
+func (u ui) String() string {
+	return fmt.Sprintf("ui.debug: %d, ui.Depth: %d", u.debug, u.Depth)
 }
 
 func (u ui) Log(a ...interface{}) {
@@ -59,8 +64,15 @@ func (u ui) Warn(a ...interface{}) {
 }
 
 func (u ui) Info(a ...interface{}) {
-	if u.debug >= DebugWarning {
+	if u.debug >= DebugUpdates {
 		fmt.Println(a...)
+	}
+}
+
+func (u ui) Infof(format string, a ...interface{}) {
+	if u.debug >= DebugUpdates {
+		fmt.Printf(strings.Repeat("  ", u.Depth))
+		fmt.Printf(format, a...)
 	}
 }
 
@@ -68,6 +80,6 @@ func (u ui) Level() int {
 	return u.debug
 }
 
-func (u ui) SetLevel(level int) {
+func (u *ui) SetLevel(level int) {
 	u.debug = level
 }

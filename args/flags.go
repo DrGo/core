@@ -146,9 +146,3 @@ func ParseArguments(args []string, top *flag.FlagSet, subs ...*flag.FlagSet) (*f
 	}
 	return flagSet, nil
 }
-
-// type devNull struct{}
-
-// func (devNull) Write(p []byte) (n int, err error) {
-// 	return len(p), nil
-// }

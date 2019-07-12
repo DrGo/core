@@ -80,6 +80,7 @@ func PrintFileContent(path string) error {
 	return err
 }
 
+// GetTempWriter returns a pointer to os.File writing to a temp file or stdout if filename==""
 func GetTempWriter(fileName string) (*os.File, error) {
 	if fileName == "<stdout>" {
 		return os.Stdout, nil
@@ -89,6 +90,14 @@ func GetTempWriter(fileName string) (*os.File, error) {
 		return nil, err
 	}
 	return out, nil
+}
+
+// GetInputReader returns a pointer to os.File reading from filename or stdout if filename==""
+func GetInputReader(fileName string) (*os.File, error) {
+	if fileName == "" || fileName == "<stdin>" {
+		return os.Stdin, nil
+	}
+	return os.Open(fileName)
 }
 
 // WriteBufferToFile atomically writes a byte array into fileName. fileName can be "" in which case

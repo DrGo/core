@@ -28,12 +28,12 @@ const (
 //_ italic _
 //__  bold __
 // These characters can be escaped using \. \ itself can be escaped using \\
-func InlinedMdToHTML(md string, opts *InlinedMdToHTMLOptions) ([]byte, error) {
+func InlinedMdToHTML(md string, opts *InlinedMdToHTMLOptions) (string, error) {
 	const null = '\x00'
 	formats := make(stacks.IntStack, 0, 100)
 	mdLen := len(md)
 	if mdLen == 0 {
-		return []byte{}, nil
+		return "", nil
 	}
 	html := make([]byte, mdLen*3)
 	i := 0                          // is the source (md) byte index
@@ -149,5 +149,5 @@ func InlinedMdToHTML(md string, opts *InlinedMdToHTMLOptions) ([]byte, error) {
 	if !formats.Empty() {
 		err = fmt.Errorf("improper nesting of markdown tags, %d tags remain unclosed", len(formats))
 	}
-	return html[:j], err
+	return string(html[:j]), err
 }
