@@ -81,7 +81,7 @@ func ParseCommandLine(top *flag.FlagSet, subs ...*flag.FlagSet) (*flag.FlagSet, 
 		s := err.Error()
 		switch {
 		case strings.Contains(s, "flag provided but not defined"):
-			s = strings.Replace(s, "provided but not defined", "does not exist", 1)
+			s = strings.Replace(s, "flag provided but not defined", "no such flag", 1)
 			return nil, fmt.Errorf(s)
 		case strings.Contains(s, "help requested"):
 			if opts.Help != nil {
@@ -101,6 +101,7 @@ func ParseCommandLine(top *flag.FlagSet, subs ...*flag.FlagSet) (*flag.FlagSet, 
 
 //ParseArguments parses arguments (passed as a string array) for the appropriate subcommand
 func ParseArguments(args []string, top *flag.FlagSet, subs ...*flag.FlagSet) (*flag.FlagSet, error) {
+	exeName := os.Args[0]
 	if top == nil {
 		top = flag.NewFlagSet("", flag.ContinueOnError)
 	}
@@ -119,7 +120,7 @@ func ParseArguments(args []string, top *flag.FlagSet, subs ...*flag.FlagSet) (*f
 	}
 	flagSet, found := cmdTable[args[0]] //retrieve the FlagSet for this subcommand
 	if !found {
-		return nil, fmt.Errorf("command %v is not found", args[0])
+		return nil, fmt.Errorf("no such command %v. For a list of commands, type %s help", args[0], exeName)
 	}
 	if len(args) == 1 { //nothing left to parse
 		return flagSet, nil

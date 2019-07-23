@@ -9,6 +9,14 @@ import (
 	"strings"
 )
 
+
+func ParseWindowsFileArguments(args string) ([]string, error) {
+	if !strings.ContainsAny(args, "*?") {
+		return []string{args}, nil
+	}
+	return filepath.Glob(args)
+}
+
 //GetFileList get list of files from a pattern
 func GetFileList(pattern string) (matches []string, err error) {
 	matches, err = filepath.Glob(pattern)
