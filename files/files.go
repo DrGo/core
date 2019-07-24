@@ -37,6 +37,9 @@ func CloseAndRename(f *os.File, newFileName string, overWrite bool) error {
 	if err := f.Close(); err != nil {
 		return err
 	}
+	if f.Name() == newFileName {
+		return nil
+	}
 	//if the newFileName already exists and overWrite is false, return an error
 	if !overWrite {
 		if _, err := os.Stat(newFileName); err == nil {
@@ -44,7 +47,7 @@ func CloseAndRename(f *os.File, newFileName string, overWrite bool) error {
 		}
 	}
 	//otherwise, return the result of attempting to rename it
-	//	fmt.Printf("in closeandrename(): saving %s as\n %s\n", f.Name(), newFileName)
+	fmt.Printf("in closeandrename(): saving %s as\n %s\n", f.Name(), newFileName) /*DEBUG*/
 	return os.Rename(f.Name(), newFileName)
 }
 
@@ -82,9 +85,9 @@ func PrintFileContent(path string) error {
 
 // GetTempWriter returns a pointer to os.File writing to a temp file or stdout if filename==""
 func GetTempWriter(fileName string) (*os.File, error) {
-	if fileName == "<stdout>" {
-		return os.Stdout, nil
-	}
+	// if fileName == "<stdout>" {
+	// 	return os.Stdout, nil
+	// }
 	out, err := ioutil.TempFile("", "rwtmp") //create in the system default temp folder, a file prefixed with rwtmp
 	if err != nil {
 		return nil, err

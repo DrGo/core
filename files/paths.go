@@ -82,6 +82,11 @@ func GetOutputDir(dirName string, preserveTempFiles bool) (dir string, temp bool
 	return dir, true, nil
 }
 
+//GetTempDir creates and return name of a folder created in 
+func GetTempDir() (string, error) {
+	return ioutil.TempDir("", "rw-temp101")
+}
+
 // ReplaceFileExt returns fileName with extension replace with newExt (both ext and .ext are ok)
 func ReplaceFileExt(fileName, newExt string) string {
 	ext := path.Ext(fileName)
