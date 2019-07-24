@@ -72,7 +72,7 @@ func NewCommand(name string, args []Flag) *flag.FlagSet {
 	return cmd
 }
 
-// ParseCommandLine parses command line arguments for the appropriate subcommandparses arguments.
+// ParseCommandLine parses command line arguments for the appropriate subcommand.
 // The first command is the default command and can be nil.
 func ParseCommandLine(top *flag.FlagSet, subs ...*flag.FlagSet) (*flag.FlagSet, error) {
 	exeName := os.Args[0]
@@ -87,8 +87,6 @@ func ParseCommandLine(top *flag.FlagSet, subs ...*flag.FlagSet) (*flag.FlagSet, 
 			if opts.Help != nil {
 				opts.Help()
 			}
-			//FIXME: prevent treating this as an error
-			// return nil, nil
 		default:
 			return nil, err
 		}
