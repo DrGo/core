@@ -33,6 +33,7 @@ func FileDescriptorsToStrings(fds []*FileDescriptor) (ss []string) {
 //CloseAndRename closes an os.File and save it to newFileName overwriting if it exists if overWrite is true.
 //Useful for closing and renaming a temp file to a permanent path
 //FIXME: replace with atomic package because this one may not work under Windows
+//FIXME: add err option and rename only if err==nil
 func CloseAndRename(f *os.File, newFileName string, overWrite bool) error {
 	if err := f.Close(); err != nil {
 		return err

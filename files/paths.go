@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 //GetExeDir returns exe dir
@@ -82,7 +83,7 @@ func GetOutputDir(dirName string, preserveTempFiles bool) (dir string, temp bool
 	return dir, true, nil
 }
 
-//GetTempDir creates and return name of a folder created in 
+//GetTempDir creates and return name of a folder created in
 func GetTempDir() (string, error) {
 	return ioutil.TempDir("", "rw-temp101")
 }
@@ -137,6 +138,14 @@ func FileExists(path string) bool {
 		return false
 	}
 	return !info.IsDir()
+}
+
+// GetTempFileName returns a temp file name in dir ending with ext.
+func GetTempFileName(dir, ext string) string {
+	if dir == "" {
+		dir, _ = GetTempDir()
+	}
+	return filepath.Join(dir, string(os.Getpid())+time.Now().Format("20060102150405")+"."+ext)
 }
 
 // func FileCompare(file1, file2 string) (error, bool) {
