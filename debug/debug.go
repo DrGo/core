@@ -6,11 +6,6 @@ import (
 )
 
 const (
-	ExitWithError = 1
-	ExitSuccess   = 0
-)
-
-const (
 	//DebugSilent print errors only
 	DebugSilent int = iota
 	//DebugWarning print warnings and errors
@@ -20,6 +15,16 @@ const (
 	//DebugAll print internal debug messages, execution updates, warnings and errors
 	DebugAll
 )
+
+var debugString = []string{"Silent", "Warning", "Update", "All"}
+
+// String returns a textual representation of a debug constant
+func String(debug int) string {
+	if debug >= DebugSilent && debug <= DebugAll {
+		return debugString[debug]
+	}
+	return "Invalid"
+}
 
 // UI handles interactions with the user
 type UI interface {
@@ -39,6 +44,10 @@ func NewUI(debug int) UI {
 	}
 }
 
+func (u ui) String() string {
+	return String(u.Debug)
+}
+
 func (u ui) Log(a ...interface{}) {
 	if u.Debug >= DebugAll {
 		fmt.Printf(strings.Repeat("  ", u.Depth))
@@ -52,25 +61,4 @@ func (u ui) Warn(a ...interface{}) {
 		fmt.Printf(strings.Repeat("  ", u.Depth) + "warning: ")
 		fmt.Println(a...)
 	}
-}
-
-
-//Crash prints errors and exit with code 2. First line is printed in bold red
-func Crash(err error) {
-	lines := strings.Split(err.Error(), "\n")
-	if len(lines) > 0 {
-		//"\033[31;1;4m turn color red and bold. \033[0m reset colors"
-		fmt.Fprintf(os.Stderr, "\033[31;1m%s\n\033[0m", lines[0])
-		for i := 1; i < len(lines); i++ {
-			fmt.Fprintf(os.Stderr, "%s\n", lines[i])
-		}
-	}
-	os.Exit(ExitWithError)
-}
-
-//Crashf prints errors and exit with code 2. First line is printed in bold red
-func Crashf(format string, a ...interface{}) {
-	err := fmt.Sprintf(format, a...)
-	fmt.Fprintf(os.Stderr, "\033[31;1m%s\n\033[0m", err)
-	os.Exit(ExitWithError)
 }

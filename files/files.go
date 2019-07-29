@@ -11,25 +11,6 @@ import (
 	"path/filepath"
 )
 
-type FileDescriptor struct {
-	Name    string
-	Version string `json:",omitempty"`
-}
-
-func NewFileDescriptor(fileName string) *FileDescriptor {
-	return &FileDescriptor{
-		Name:    fileName,
-		Version: "",
-	}
-}
-
-func FileDescriptorsToStrings(fds []*FileDescriptor) (ss []string) {
-	for _, f := range fds {
-		ss = append(ss, f.Name)
-	}
-	return ss
-}
-
 //CloseAndRename closes an os.File and save it to newFileName overwriting if it exists if overWrite is true.
 //Useful for closing and renaming a temp file to a permanent path
 //FIXME: replace with atomic package because this one may not work under Windows
@@ -48,7 +29,7 @@ func CloseAndRename(f *os.File, newFileName string, overWrite bool) error {
 		}
 	}
 	//otherwise, return the result of attempting to rename it
-	fmt.Printf("in closeandrename(): saving %s as\n %s\n", f.Name(), newFileName) /*DEBUG*/
+	// fmt.Printf("in closeandrename(): saving %s as\n %s\n", f.Name(), newFileName) /*DEBUG*/
 	return os.Rename(f.Name(), newFileName)
 }
 
@@ -187,3 +168,22 @@ func WriteToFile(filename string, data io.Reader) (err error) {
 	}
 	return os.Rename(f.Name(), filename)
 }
+
+// type FileDescriptor struct {
+// 	Name    string
+// 	Version string `json:",omitempty"`
+// }
+
+// func NewFileDescriptor(fileName string) *FileDescriptor {
+// 	return &FileDescriptor{
+// 		Name:    fileName,
+// 		Version: "",
+// 	}
+// }
+
+// func FileDescriptorsToStrings(fds []*FileDescriptor) (ss []string) {
+// 	for _, f := range fds {
+// 		ss = append(ss, f.Name)
+// 	}
+// 	return ss
+// }

@@ -145,7 +145,7 @@ func GetTempFileName(dir, ext string) string {
 	if dir == "" {
 		dir, _ = GetTempDir()
 	}
-	return filepath.Join(dir, string(os.Getpid())+time.Now().Format("20060102150405")+"."+ext)
+	return filepath.Clean(filepath.Join(dir, time.Now().Format("20060102150405")+"."+ext))
 }
 
 // func FileCompare(file1, file2 string) (error, bool) {
