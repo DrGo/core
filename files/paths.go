@@ -2,9 +2,7 @@ package files
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -132,34 +130,6 @@ func RemoveIfExists(fileName string) error {
 		err = nil
 	}
 	return err
-}
-
-// CreateFile creates the named file with mode 0666 (before umask), truncating
-// it if it already exists and overWrite is true. If successful, methods on the returned
-// File can be used for I/O; the associated file descriptor has mode O_RDWR.
-// If there is an error, it will be of type *PathError.
-func CreateFile(fileName string, overWrite bool) (out *os.File, err error) {
-	mode := os.O_RDWR | os.O_CREATE | os.O_TRUNC //read-write, create if none exists or truncate existing one
-	if !overWrite {
-		mode |= os.O_EXCL //file must not exist
-	}
-	return os.OpenFile(fileName, mode, 0666)
-}
-
-//CheckTextStream returns an error if r does contain text otherwise return nil
-func CheckTextStream(r io.Reader, streamMinSize int) error {
-	first512Bytes := make([]byte, 512)
-	n, err := r.Read(first512Bytes)
-	switch {
-	case err != nil && err != io.EOF:
-		return err
-	case n < streamMinSize:
-		return fmt.Errorf("stream is empty or does not contain sufficient data, size=%d", n)
-	case !strings.Contains(http.DetectContentType(first512Bytes[0:n]), "text"):
-		return fmt.Errorf("file does not contain text (possibly a binary file)")
-	default:
-		return nil
-	}
 }
 
 func FileExists(path string) bool {
