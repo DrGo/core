@@ -22,6 +22,7 @@ func GetExeDir() (string, error) {
 	return filepath.Dir(dir), nil
 }
 
+//BaseNameNoExt returns file name without the extension
 func BaseNameNoExt(path string) string {
 	s := filepath.Base(path)
 	dot := strings.LastIndexByte(s, '.')
@@ -41,26 +42,55 @@ func ConstructFileName(path, newExt, prefix, postfix string) string {
 	return filepath.Join(dir, base)
 }
 
-//GetFullPath returns fileName if it has a full path. If not, it returns a filename relative to the current working dir
-func GetFullPath(fileName string) (string, error) {
-	fileName = strings.TrimSpace(fileName)
-	if fileName == "" {
+// GetExistingFullPath returns full path to fileName if it exists; otherwise returns an error
+func GetExistingFullPath(fileName, sourceDir string) (string, error) {
+	fileName = filepath.Clean(strings.TrimSpace(fileName))
+	if fileName == "." || filepath.Base(fileName) == "" { // see filepath.Cleans() docs
+		return "", fmt.Errorf("'%s' is not a valid file name", fileName)
+	}
+	//1) if absolute and exists, return as is
+	if filepath.IsAbs(fileName) && FileExists(fileName) {
 		return fileName, nil
 	}
-	//FIXME: replace with Abs()
-	//// Abs returns an absolute representation of path.
+	// must be a relative filename
+	//2) if a valid inputdir provided, return dir+filename if it exists
+	sourceDir = filepath.Clean(strings.TrimSpace(sourceDir))
+	if filepath.Dir(sourceDir) != "." {
+		path := filepath.Join(sourceDir, fileName)
+		if FileExists(path) {
+			return path, nil
+		}
+	}
+	//3) use current dir + filename
+	path, err := filepath.Abs(fileName)
+	//from godocs: Abs returns an absolute representation of path.
 	// If the path is not absolute it will be joined with the current
 	// working directory to turn it into an absolute path. The absolute
 	// path name for a given file is not guaranteed to be unique.
-	if filepath.IsAbs(fileName) || filepath.Dir(fileName) != "." { // absolute path or dir provided
+	if err == nil && FileExists(path) {
+		return path, nil
+	}
+	return "", fmt.Errorf("no such file: %s", fileName)
+}
+
+//GetFullPath returns fileName if it has a full path. If not, it returns a filename relative to the current working dir
+func GetFullPath(fileName, sourceDir string) (string, error) {
+	fileName = filepath.Clean(strings.TrimSpace(fileName))
+	if fileName == "." || filepath.Base(fileName) == "" { // see filepath.Cleans() docs
+		return "", fmt.Errorf("'%s' is not a valid file name", fileName)
+	}
+	//1) if absolute, return as is
+	if filepath.IsAbs(fileName) {
 		return fileName, nil
 	}
-	//add support to dir argument to be used if not empty before using os.Getwd()
-	path, err := os.Getwd()
-	if err != nil {
-		return "", err
+	// must be a relative filename
+	//2) if a valid inputdir provided, return dir+filename if it exists
+	sourceDir = filepath.Clean(strings.TrimSpace(sourceDir))
+	if filepath.Dir(sourceDir) != "." {
+		return filepath.Join(sourceDir, fileName), nil
 	}
-	return filepath.Join(path, fileName), nil
+	//3) use current dir + filename
+	return filepath.Abs(fileName)
 }
 
 //GetOutputDir returns dirname or current working directory if preserveTempFiles is true

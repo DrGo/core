@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 //CloseAndRename closes an os.File and save it to newFileName overwriting if it exists if overWrite is true.
@@ -33,49 +34,50 @@ func CloseAndRename(f *os.File, newFileName string, overWrite bool) error {
 	return os.Rename(f.Name(), newFileName)
 }
 
-func DetectContentType(r io.ReadSeeker) (string, error) {
-	// Only the first 512 bytes are needed
-	buffer := make([]byte, 512)
-	n, err := r.Read(buffer)
-	if err != nil && err != io.EOF {
+// CloseAndName close an os.File and rename it using dir/base.name ext if provided and returns its full path
+// If the file exists, it attempts to find unused filename by appending a number to basename
+func CloseAndName(f *os.File, dir, baseName, ext string) (string, error) {
+	var err error
+	if err = f.Close(); err != nil {
 		return "", err
 	}
-	// Reset the read pointer if necessary.
-	r.Seek(0, 0)
-	// Always returns a valid content-type and "application/octet-stream" if no others seemed to match.
-	return http.DetectContentType(buffer[:n]), nil
+	if baseName == "" {
+		baseName = BaseNameNoExt(f.Name()) //use os.File basefilename
+	}
+	if ext == "" {
+		ext = filepath.Ext(f.Name()) //use os.File ext if any
+	}
+	// if dir is empty, assume current dir
+	switch dir {
+	case ".":
+		if dir, err = os.Getwd(); err != nil {
+			return "", err
+		}
+	case "":
+		dir = filepath.Dir(f.Name()) //use os.File dir
+	}
+	//try and come up with a valid name
+	fileName := filepath.Join(dir, baseName+ext)
+	for i := 1; i < 10001; i++ {
+		if _, err := os.Stat(fileName); os.IsNotExist(err) {
+			return fileName, os.Rename(f.Name(), fileName)
+		}
+		fileName = filepath.Join(dir, baseName+strconv.Itoa(i)+ext)
+	}
+	return "", fmt.Errorf("failed to rename using a unique file name")
 }
 
-func PrintFileStat(path string) error {
-	fi, err := os.Stat(path)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("file name=%s\n", path)
-	fmt.Printf("file size=%d\n", fi.Size())
-	return nil
-}
-
-func PrintFileContent(path string) error {
-	file, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-	_, err = io.Copy(file, os.Stdout)
-	return err
-}
-
-// GetTempWriter returns a pointer to os.File writing to a temp file or stdout if filename==""
-func GetTempWriter(fileName string) (*os.File, error) {
-	// if fileName == "<stdout>" {
-	// 	return os.Stdout, nil
-	// }
-	out, err := ioutil.TempFile("", "rwtmp") //create in the system default temp folder, a file prefixed with rwtmp
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
+// GetTempWriter returns a pointer to os.File writing to a temp file
+// func GetTempWriter(fileName string) (*os.File, error) {
+// 	// if fileName == "<stdout>" {
+// 	// 	return os.Stdout, nil
+// 	// }
+// 	out, err := ioutil.TempFile("", "rwtmp") //create in the system default temp folder, a file prefixed with rwtmp
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return out, nil
+// }
 
 // GetInputReader returns a pointer to os.File reading from filename or stdout if filename==""
 func GetInputReader(fileName string) (*os.File, error) {
@@ -87,6 +89,7 @@ func GetInputReader(fileName string) (*os.File, error) {
 
 // WriteBufferToFile atomically writes a byte array into fileName. fileName can be "" in which case
 // a temp file is created and its name is returned
+// FIXME: optimize
 func WriteBufferToFile(fileName string, buf []byte, overWrite bool) (usedFileName string, err error) {
 	file, err := ioutil.TempFile("", "rwtmp") //created in the system default temp folder
 	if err != nil {
@@ -169,21 +172,34 @@ func WriteToFile(filename string, data io.Reader) (err error) {
 	return os.Rename(f.Name(), filename)
 }
 
-// type FileDescriptor struct {
-// 	Name    string
-// 	Version string `json:",omitempty"`
-// }
+func DetectContentType(r io.ReadSeeker) (string, error) {
+	// Only the first 512 bytes are needed
+	buffer := make([]byte, 512)
+	n, err := r.Read(buffer)
+	if err != nil && err != io.EOF {
+		return "", err
+	}
+	// Reset the read pointer if necessary.
+	r.Seek(0, 0)
+	// Always returns a valid content-type and "application/octet-stream" if no others seemed to match.
+	return http.DetectContentType(buffer[:n]), nil
+}
 
-// func NewFileDescriptor(fileName string) *FileDescriptor {
-// 	return &FileDescriptor{
-// 		Name:    fileName,
-// 		Version: "",
-// 	}
-// }
+func PrintFileStat(path string) error {
+	fi, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("file name=%s\n", path)
+	fmt.Printf("file size=%d\n", fi.Size())
+	return nil
+}
 
-// func FileDescriptorsToStrings(fds []*FileDescriptor) (ss []string) {
-// 	for _, f := range fds {
-// 		ss = append(ss, f.Name)
-// 	}
-// 	return ss
-// }
+func PrintFileContent(path string) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(file, os.Stdout)
+	return err
+}
