@@ -16,6 +16,8 @@ const (
 	DebugAll
 )
 
+//TODO: add error, errorf and move crash and crashf here
+
 // UI handles interactions with the user
 type UI interface {
 	Log(a ...interface{})
@@ -27,6 +29,7 @@ type UI interface {
 	SetLevel(level int)
 }
 
+//TODO: add error and log os.File to allow changing output destination (https://github.com/github/hub/tree/master/ui)
 type ui struct {
 	Depth int
 	debug int

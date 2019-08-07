@@ -1,3 +1,10 @@
+func Check(err error) {
+	if err != nil {
+		ui.Errorln(err)
+		os.Exit(1)
+	}
+}
+
 type ErrorContext interface {
     ContainsError() bool
     SetError(err error)
