@@ -1,5 +1,7 @@
 package stacks
 
+type Example []string
+
 //IntStack stack of integers
 type IntStack []int
 
