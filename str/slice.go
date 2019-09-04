@@ -18,3 +18,12 @@ func InsertToStringSlice(slice []string, index int, value string) []string {
 	// Return the result.
 	return slice
 }
+
+//StringArrayToInterface converts a string array to interface array for use in *printf functions
+func StringArrayToInterface(arr []string) []interface{} {
+	vals := make([]interface{}, len(arr))
+	for i, v := range arr {
+		vals[i] = v
+	}
+	return vals
+}
