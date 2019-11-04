@@ -132,3 +132,37 @@ func InlinedMdToHTML(md string, opts *InlinedMdToHTMLOptions) (string, error) {
 	}
 	return html.String(), err
 }
+
+// EscapeAsTex returns a string representation of s that is suitable for Latex output
+func EscapeAsTex(s string) string {
+	var sb strings.Builder
+	var es string
+	written := 0
+	// The byte loop below assumes that all URLs use UTF-8 as the
+	// content-encoding.
+	for i, n := 0, len(s); i < n; i++ {
+		c := s[i]
+		switch c {
+		case '%', '#', '$', '&', '_', '{', '}':
+			es = "\\" + string(c)
+		case '\\':
+			es = `\textbackslash{}`
+		case '^':
+			es = `\^{}` // `\textasciicircum{}`
+		case '~':
+			es = `\~{}` // `\textasciitilde{}`
+		default: // do not process any other char
+			continue
+		}
+		if written == 0 {
+			sb.Grow(len(s) + 16)
+		}
+		sb.WriteString(s[written:i] + es)
+		written = i + 1
+	}
+	sb.WriteString(s[written:])
+	if written != 0 {
+		return sb.String()
+	}
+	return s
+}

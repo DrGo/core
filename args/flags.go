@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -15,6 +16,7 @@ type Options struct {
 	Help func()
 	//noSuchCommand is the function when the user enters the wrong command
 	// NoSuchCommand func()
+	//TODO: add prefix to use before the name of every app's env var
 }
 
 var opts *Options
@@ -60,6 +62,7 @@ func NewCommand(name string, args []Flag) *flag.FlagSet {
 		}
 		switch p := arg.dest.(type) {
 		case *string:
+			//TOOD: add envOrDefault(arg.name, *p) call as a default params!
 			cmd.StringVar(p, arg.name, *p, "")
 		case *bool:
 			cmd.BoolVar(p, arg.name, *p, "")
@@ -133,7 +136,6 @@ func ParseArguments(args []string, top *flag.FlagSet, subs ...*flag.FlagSet) (*f
 			break
 		}
 		args = args[1:]
-
 	}
 	//parse the flags
 	if err := flagSet.Parse(args); err != nil {
@@ -144,4 +146,21 @@ func ParseArguments(args []string, top *flag.FlagSet, subs ...*flag.FlagSet) (*f
 		return nil, err
 	}
 	return flagSet, nil
+}
+
+func envOrString(key string, defaultVal string) string {
+	if val, ok := os.LookupEnv(strings.ToUpper(key)); ok {
+		return val
+	}
+	return defaultVal
+}
+
+func envOrInt(key string, defaultVal int) int {
+	if val, ok := os.LookupEnv(strings.ToUpper(key)); ok {
+		v, err := strconv.Atoi(val)
+		if err == nil {
+			return v
+		}
+	}
+	return defaultVal
 }
