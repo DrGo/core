@@ -22,6 +22,9 @@ type RunOptions struct {
 	OutputFileName        string
 	OutputFormat          string
 	WorkDirName           string
+	InputDirName  string
+	InputFilesGlob string
+  OutputDirName string
 	TempDirName           string
 	PreserveWorkFiles     bool
 	DefaultConfigFileName string
@@ -35,6 +38,7 @@ type RunOptions struct {
 func DefaultOptions() *RunOptions {
 	return &RunOptions{
 		Debug: defaultDebugLevel,
+    
 	}
 }
 

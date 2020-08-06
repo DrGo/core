@@ -56,10 +56,12 @@ func NewCommand(name string, args []Flag) *flag.FlagSet {
 			expanded[len(expanded)-1].name = arg.letter
 		}
 	}
+	// create a flag depending on passed flag.dest type
 	for _, arg := range expanded {
 		if arg.value == nil {
 			arg.value = arg.dest
 		}
+		// fmt.Println(arg.name)
 		switch p := arg.dest.(type) {
 		case *string:
 			//TOOD: add envOrDefault(arg.name, *p) call as a default params!
@@ -68,6 +70,9 @@ func NewCommand(name string, args []Flag) *flag.FlagSet {
 			cmd.BoolVar(p, arg.name, *p, "")
 		case *int:
 			cmd.IntVar(p, arg.name, *p, "")
+    case *[]string:
+      s := Strings(*p)
+			cmd.Var(&s, arg.name, "")
 		default:
 			continue
 		}

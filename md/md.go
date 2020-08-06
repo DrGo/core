@@ -52,7 +52,7 @@ func InlinedMdToHTML(md string, opts *InlinedMdToHTMLOptions) (string, error) {
 	cpCurrent := func() {
 		html.WriteByte(md[i])
 	}
-	//TODO: check for errors
+
 	emit := func(fmtType, inc int, tag string) {
 		//fmt.Println("format=", fmtType, "top is", formats[len(formats)-1].format)
 		if formats.TopIs(fmtType) { //we are in a stretch of type fmtType; so close it
