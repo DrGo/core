@@ -12,7 +12,30 @@ import (
 	"strconv"
 	"strings"
 )
-
+// NameFromParts using an a fileName it returns its full path overriding its components
+// as appropriate by dir, baseName and ext if provided; if dir, basename and ext
+// are all empty, it returns f.Name(). if dir="." it returns os.GetWd() + f.Name() 
+func NameFromParts(fileName, dir, baseName, ext string) (string, error) {
+	var err error
+	if baseName == "" {
+		baseName = BaseNameNoExt(fileName)
+	}
+	if ext == "" {
+		ext = filepath.Ext(fileName) 
+	}
+	// if dir is empty, assume current dir
+	switch dir {
+	case ".":
+		if dir, err = os.Getwd(); err != nil {
+			return "", err
+		}
+	case "":
+		dir = filepath.Dir(fileName) 
+	}
+	//try and come up with a valid name
+	return filepath.Join(dir, baseName+ext), nil
+}
+	
 //CloseAndRename closes an os.File and save it to newFileName overwriting if it exists if overWrite is true.
 //Useful for closing and renaming a temp file to a permanent path
 //FIXME: replace with atomic package because this one may not work under Windows
@@ -35,30 +58,16 @@ func CloseAndRename(f *os.File, newFileName string, overWrite bool) error {
 	return os.Rename(f.Name(), newFileName)
 }
 
-// CloseAndName close an os.File and rename it using dir/base.name ext if provided and returns its full path
+// CloseAndName close an os.File and rename it to fileName and returns its full path
 // If the file exists, it attempts to find unused filename by appending a number to basename
-func CloseAndName(f *os.File, dir, baseName, ext string) (string, error) {
+func CloseAndName(f *os.File, fileName string) (string, error) {
 	var err error
 	if err = f.Close(); err != nil {
 		return "", err
 	}
-	if baseName == "" {
-		baseName = BaseNameNoExt(f.Name()) //use os.File basefilename
-	}
-	if ext == "" {
-		ext = filepath.Ext(f.Name()) //use os.File ext if any
-	}
-	// if dir is empty, assume current dir
-	switch dir {
-	case ".":
-		if dir, err = os.Getwd(); err != nil {
-			return "", err
-		}
-	case "":
-		dir = filepath.Dir(f.Name()) //use os.File dir
-	}
-	//try and come up with a valid name
-	fileName := filepath.Join(dir, baseName+ext)
+	dir, baseName := filepath.Split(fileName)
+  ext := filepath.Ext(baseName)
+  baseName = BaseNameNoExt(baseName)
 	for i := 1; i < 10001; i++ {
 		if _, err := os.Stat(fileName); os.IsNotExist(err) {
 			return fileName, os.Rename(f.Name(), fileName)

@@ -71,7 +71,8 @@ func GetExistingFullPath(fileName, sourceDir string) (string, error) {
 	return "", fmt.Errorf("no such file: %s", fileName)
 }
 
-//GetFullPath returns fileName if it has a full path. If not, it returns a filename relative to the current working dir
+// GetFullPath returns fileName if it has a absolute path. 
+// If not, it returns a filename relative to the current working dir
 func GetFullPath(fileName, sourceDir string) (string, error) {
 	fileName = filepath.Clean(strings.TrimSpace(fileName))
 	if fileName == "." || filepath.Base(fileName) == "" { // see filepath.Cleans() docs
@@ -146,6 +147,11 @@ func GetTempFileName(dir, ext string) string {
 		dir, _ = GetTempDir()
 	}
 	return filepath.Clean(filepath.Join(dir, time.Now().Format("20060102150405")+"."+ext))
+}
+
+func NotExists(path string) bool {
+    _, err := os.Stat(path)
+    return os.IsNotExist(err)
 }
 
 // func FileCompare(file1, file2 string) (error, bool) {

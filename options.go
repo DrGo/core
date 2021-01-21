@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/drgo/core/files"
-	"github.com/drgo/mdson"
+	"github.com/drgo/core/mdson"
 )
 
 const defaultDebugLevel = 1
@@ -32,6 +32,7 @@ type RunOptions struct {
 	LibVersion            string `mdson:"-"`
 	ExecutableName        string `mdson:"-"`
 	DefaultScriptFileName string `mdson:"-"`
+	Serve bool `mdson:"-"`
 }
 
 //DefaultOptions returns a default option setting
