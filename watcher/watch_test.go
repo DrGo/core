@@ -1,37 +1,40 @@
-package watcher
+package watcher_test
 
 import (
 	"context"
 	"fmt"
-	"os"
+	"testing"
 	"time"
+
+	"github.com/drgo/core/tests"
+	"github.com/drgo/core/watcher"
 )
 
-func ExampleNew() {
-	err := os.Mkdir("test", 0755)
-	if err != nil && !os.IsExist(err){
-		panic(err)
-	}
-	events := make(chan Event)
+func TestNew(t *testing.T) {
+  dir, clean:= tests.MkTempDir(t)
+  defer clean()
+	events := make(chan watcher.Event)
+	// monitor events
 	go func() {
 		for e := range events {
 			fmt.Println("Event:", e.String())
 		}
 	}()
+	// start watcher
 	go func() {
-		time.Sleep(1 * time.Second)		
-	  os.Remove("test/test")
-		os.WriteFile("test/test.txt", []byte("test"), 0666)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+    err := watcher.New(ctx, dir, events)
+		if err != nil {
+			t.Fatalf("Error", err)
+		}
 	}()
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	err = New(ctx, "test", events)
-	if err != nil {
-		fmt.Println("Error", err)
-	}
-	// time.Sleep(3 * time.Second)
-	
-	// Output:
-	// Event: "test/test.txt": CHMOD
-	// Event: "test/test.txt": WRITE
+	// induce watcher events
+	// time.Sleep(1 * time.Second)
+  f, del := tests.MkTempFile(t, dir) 
+	f.WriteString("testing...")
+	f.Sync()
+  f.Close()
+  time.Sleep(50 * time.Millisecond) // give system time to sync write change before delete
+  del()
 }
