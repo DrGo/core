@@ -1,3 +1,4 @@
+// Package core is a collection of functions missing from Go's standard library
 package core
 
 import (
@@ -22,9 +23,9 @@ type RunOptions struct {
 	OutputFileName        string
 	OutputFormat          string
 	WorkDirName           string
-	InputDirName  string
-	InputFilesGlob string
-  OutputDirName string
+	InputDirName          string
+	InputFilesGlob        string
+	OutputDirName         string
 	TempDirName           string
 	PreserveWorkFiles     bool
 	DefaultConfigFileName string
@@ -32,14 +33,14 @@ type RunOptions struct {
 	LibVersion            string `mdson:"-"`
 	ExecutableName        string `mdson:"-"`
 	DefaultScriptFileName string `mdson:"-"`
-	Serve bool `mdson:"-"`
+	Serve                 bool   `mdson:"-"`
+	Watch                 bool   `mdson:"-"`
 }
 
 //DefaultOptions returns a default option setting
 func DefaultOptions() *RunOptions {
 	return &RunOptions{
 		Debug: defaultDebugLevel,
-    
 	}
 }
 

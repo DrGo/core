@@ -29,43 +29,47 @@ func (event Event) String() string {
 	return fmt.Sprintf("%q: %s", event.Name, event.Op.String())
 }
 
-// New watches for changes in a dir and send notification through the result channel.
+// Watch watches for changes in a dir and send notification through the result channel.
 // runs in a loop until ctx is cancelled.
-func New(ctx context.Context, dir string, result chan Event) error {
+// func Watch(ctx context.Context, dir string, result chan Event) error {
+
+func Watch(ctx context.Context, towatch chan string, result chan Event) error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return fmt.Errorf("watching files failed:%v", err)
 	}
 	defer watcher.Close()
-	done := make(chan bool) //used below to keep the go routine alive
+	// done := make(chan bool) //used below to keep the go routine alive
 	go func() {
 		for {
 			select {
+			//FIXME: unwatch deleted files
 			case event, ok := <-watcher.Events:
+				// fmt.Println("inside watch():" + event.String())
 				if !ok {
 					return
 				}
 				result <- Event{event, nil}
 			case err, ok := <-watcher.Errors:
+				// fmt.Println("inside watch(): failure" + err.Error())
 				if !ok {
 					return
 				}
 				result <- Event{fsnotify.Event{}, err}
 			case <-ctx.Done():
-			  close(done)
+				close(towatch)
 				return
 			}
 		}
 	}()
-
-	err = watcher.Add(dir)
-	if err != nil {
-		return fmt.Errorf("watching files failed:%v", err)
+	for f := range towatch {
+    // fmt.Println("watch(): adding "+ f)
+		err = watcher.Add(f)
+		if err != nil {
+			return fmt.Errorf("watching [%s] failed:%v", f, err)
+		}
 	}
-	<-done
+	// fmt.Println("existing watcher.watch()")
+	// <-done
 	return nil
 }
-
-
-
-

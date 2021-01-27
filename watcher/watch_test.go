@@ -10,7 +10,7 @@ import (
 	"github.com/drgo/core/watcher"
 )
 
-func TestNew(t *testing.T) {
+func TestWatch(t *testing.T) {
   dir, clean:= tests.MkTempDir(t)
   defer clean()
 	events := make(chan watcher.Event)
@@ -21,14 +21,14 @@ func TestNew(t *testing.T) {
 		}
 	}()
 	// start watcher
-	go func() {
+	go func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-    err := watcher.New(ctx, dir, events)
+    err := watcher.Watch(ctx, dir, events)
 		if err != nil {
-			t.Fatalf("Error", err)
+      t.Fatalf("Error: %v", err)
 		}
-	}()
+	}(t)
 	// induce watcher events
 	// time.Sleep(1 * time.Second)
   f, del := tests.MkTempFile(t, dir) 
