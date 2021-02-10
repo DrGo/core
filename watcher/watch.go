@@ -4,6 +4,7 @@ package watcher
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 )
@@ -29,9 +30,15 @@ func (event Event) String() string {
 	return fmt.Sprintf("%q: %s", event.Name, event.Op.String())
 }
 
-// Watch watches for changes in a dir and send notification through the result channel.
+// WatchDir watches for changes in a dir and send notification through the result channel.
 // runs in a loop until ctx is cancelled.
-// func Watch(ctx context.Context, dir string, result chan Event) error {
+func WatchDir(ctx context.Context, dir string, result chan Event) error {
+	towatch := make(chan string, 1)
+	towatch <- dir
+	return Watch(ctx, towatch, result)
+}
+//TODO: make delay configurable
+const delay time.Duration = 250 * time.Millisecond
 
 func Watch(ctx context.Context, towatch chan string, result chan Event) error {
 	watcher, err := fsnotify.NewWatcher()
@@ -39,8 +46,14 @@ func Watch(ctx context.Context, towatch chan string, result chan Event) error {
 		return fmt.Errorf("watching files failed:%v", err)
 	}
 	defer watcher.Close()
-	// done := make(chan bool) //used below to keep the go routine alive
 	go func() {
+		sender := time.NewTicker(delay)
+		received := make(map[fsnotify.Event]bool)
+		send := func(event fsnotify.Event) {
+			// fmt.Println("sending event:", event.String())
+			result <- Event{event, nil}
+			delete(received, event)
+		}
 		for {
 			select {
 			//FIXME: unwatch deleted files
@@ -49,13 +62,19 @@ func Watch(ctx context.Context, towatch chan string, result chan Event) error {
 				if !ok {
 					return
 				}
-				result <- Event{event, nil}
+				if !received[event]{ //we have not receieved this event
+					received[event] = true 
+				}
 			case err, ok := <-watcher.Errors:
 				// fmt.Println("inside watch(): failure" + err.Error())
 				if !ok {
 					return
 				}
 				result <- Event{fsnotify.Event{}, err}
+			case <-sender.C:  //send any unsent event
+        for event := range received {
+           send(event)
+        } 
 			case <-ctx.Done():
 				close(towatch)
 				return
@@ -63,13 +82,11 @@ func Watch(ctx context.Context, towatch chan string, result chan Event) error {
 		}
 	}()
 	for f := range towatch {
-    // fmt.Println("watch(): adding "+ f)
+		// fmt.Println("watch(): adding "+ f)
 		err = watcher.Add(f)
 		if err != nil {
 			return fmt.Errorf("watching [%s] failed:%v", f, err)
 		}
 	}
-	// fmt.Println("existing watcher.watch()")
-	// <-done
 	return nil
 }
