@@ -1,7 +1,6 @@
 package template
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -9,7 +8,27 @@ import (
 	"github.com/matryer/is"
 )
 
+const testDir="tests"
 
+func TestParseGlob(t *testing.T){
+  
+	// pattern is the glob pattern used to find all the template files.
+	pattern := "*.tmpl" // filepath.Join(testDir, "*.tmpl")
+
+	// Here starts the example proper.
+	// T0.tmpl is the first name matched, so it becomes the starting template,
+	// the value returned by ParseGlob.
+	tmpl := Must(ParseGlob(os.DirFS(testDir),pattern))
+  // tList := listTemplateNodes(tmpl.Tree.Root, nil)
+  // fmt.Println("Templates found:", strings.Join(tList, ","))
+	err := tmpl.ExecuteTemplate(os.Stdout,"parent.tmpl", nil)
+	
+	if err != nil {
+		log.Fatalf("template execution: %s", err)
+	}
+	// Output:
+	// T0 invokes T1: (T1 invokes T2: (This is T2))
+}
 
 
 var layout = `
@@ -30,7 +49,7 @@ var page2 = `
 "{{ .Message }}" from Page 2`
 
 
-func TestExtractUsingPaths(t *testing.T){
+func xTestExtractUsingPaths(t *testing.T){
   f, err := os.Open("examples/parent.tmpl")
   if err!= nil {
      t.Fatalf("%v", err)
@@ -46,47 +65,3 @@ func TestExtractUsingPaths(t *testing.T){
   t.Logf("%s", files[0])
 }
 
-func ignoreExampleTemplate() {
-	data := struct {
-		Title   string
-		Message string
-	}{
-		Title:   "Some Title",
-		Message: "Hello, World",
-	}
-
-	parser := &Parser{layout: layout}
-	output1, err := parser.Parse(page1, data)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("Page 1 output: ", output1)
-
-	output2, err := parser.Parse(page2, data)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("Page 2 output: ", output2)
-
-	// Output:
-	// Page 1 output:
-	// <html>
-	//   <head>
-	//     <title>Some Title</title>
-	//   </head>
-	//   <body>
-	//     <div>"Hello, World" from Page 1</div>
-	//   </body>
-	// </html>
-	// Page 2 output:
-	// <html>
-	//   <head>
-	//     <title>Some Title</title>
-	//   </head>
-	//   <body>
-	//     <div>"Hello, World" from Page 2</div>
-	//   </body>
-	// </html>
-}

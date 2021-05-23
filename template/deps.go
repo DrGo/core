@@ -6,30 +6,6 @@ import (
 	"github.com/drgo/core/errors"
 )
 
-func topoSort(m map[string][]string) []string {
-	var sorted []string
-	seen := make(map[string]bool)
-	var visitAll func(items []string)
-
-	visitAll = func(items []string) {
-		for _, item := range items {
-			if !seen[item] {
-				seen[item] = true
-				visitAll(m[item])
-				sorted = append(sorted, item)
-			}
-		}
-	}
-
-	var keys []string
-	for key := range m {
-		keys = append(keys, key)
-	}
-
-	sort.Strings(keys)
-	visitAll(keys)
-	return sorted
-}
 
 // KahnSort performs a topolocial sort on a map of nodes to their adjacency list
 func KahnSort(graph map[string][]string) ([]string, []string, error) {
@@ -82,4 +58,30 @@ func KahnSort(graph map[string][]string) ([]string, []string, error) {
     err = errors.Errorf("cycles detected")
 	}
 	return sorted, cyclic, err
+}
+
+
+func dfstopoSort(m map[string][]string) []string {
+	var sorted []string
+	seen := make(map[string]bool)
+	var visitAll func(items []string)
+
+	visitAll = func(items []string) {
+		for _, item := range items {
+			if !seen[item] {
+				seen[item] = true
+				visitAll(m[item])
+				sorted = append(sorted, item)
+			}
+		}
+	}
+
+	var keys []string
+	for key := range m {
+		keys = append(keys, key)
+	}
+
+	sort.Strings(keys)
+	visitAll(keys)
+	return sorted
 }

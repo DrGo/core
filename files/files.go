@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 )
-// NameFromParts using an a fileName it returns its full path overriding its components
+// NameFromParts using a fileName it returns its full path overriding its components
 // as appropriate by dir, baseName and ext if provided; if dir, basename and ext
 // are all empty, it returns f.Name(). if dir="." it returns os.GetWd() + f.Name() 
 func NameFromParts(fileName, dir, baseName, ext string) (string, error) {

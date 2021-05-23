@@ -5,19 +5,16 @@ import (
 	"fmt"
 	"html/template"
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/matryer/is"
 )
 
-func testDir(path string) string {
- return filepath.Join("test/content", path)
-}  
+ const testDir="test/content"
 
 
 func Test_ParseContentFile(t *testing.T) {
-	p, err := ParseContentFile(testDir("team/investigators/salah-mahmud.md"))
+	p, err := ParseContentFile(os.DirFS(testDir),"team/investigators/salah-mahmud.md")
 	if err != nil {
 		t.Fatalf("error %v", err)
 	}

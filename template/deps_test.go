@@ -29,7 +29,7 @@ var prereqs = map[string][]string{
 	"programming languages": {"data structures", "computer organization"},
 }
 
-func TestTopoSort(t *testing.T) {
+func xTestTopoSort(t *testing.T) {
 	sorted,_, err := KahnSort(prereqs)
 	// is := is.New(t)
 	// is.True(err==nil)
@@ -80,7 +80,7 @@ var (
 		{"0", "4", "1", "3", "2", "5", "6", "7"}}
 )
 
-func TestKhan(t *testing.T) {
+func xTestKhan(t *testing.T) {
 	sorted, _, err := KahnSort(m)
 	is := is.New(t)
 	is.NoErr(err)
@@ -128,7 +128,7 @@ var libres = []string{
 	"des_system_lib",
 }
 
-func TestKhanLibs(t *testing.T) {
+func xTestKhanLibs(t *testing.T) {
 	sorted, _, err := KahnSort(libs)
 	is := is.New(t)
 	is.NoErr(err)

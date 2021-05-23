@@ -3,12 +3,47 @@ package files
 import (
 	"io"
 	"io/ioutil"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 )
 
+// GlobFS takes a file system and one or more globing pattern and
+// return matched files [could be 0] or nil and error 
+func GlobFS(fsys fs.FS, patterns ...string) ([]string, error) {
+	var filenames []string
+	for _, pattern := range patterns {
+		list, err := fs.Glob(fsys, pattern)
+		if err != nil {
+			return nil, err
+		}
+		filenames = append(filenames, list...)
+	}
+	return Unique(filenames), nil
+}
+
+// FIXME: use binary search?! See https://github.com/mpvl/unique/blob/cbe035fff7de56b8185768b119ee94a9e42dd938/unique.go#L61
+func Unique(e []string) []string {
+    r := []string{}
+
+    for _, s := range e {
+        if !contains(r[:], s) {
+            r = append(r, s)
+        }
+    }
+    return r
+}
+
+func contains(e []string, c string) bool {
+    for _, s := range e {
+        if s == c {
+            return true
+        }
+    }
+    return false
+}
 
 func ParseWindowsFileArguments(args string) ([]string, error) {
 	if !strings.ContainsAny(args, "*?") {
@@ -60,21 +95,16 @@ func IsValidFileGlob(pattern string) bool {
 }
 
 // IsFileGlobPattern determines if "pattern" has 1 or more characters [', ']', '*' or '//' used for globbing in Go.
+// hasMeta reports whether path contains any of the magic characters
+// recognized by path.Match.
 func IsFileGlobPattern(pattern string) bool {
-	globCharFound := false
 	for i := 0; i < len(pattern); i++ {
-		switch pattern[i] {
-		case '\\':
-			if runtime.GOOS != "windows" { //in windows, \\ is not used for escaping in patterns
-				globCharFound = true
-				break
-			}
-		case '[', ']', '*':
-			globCharFound = true
-			break
+		c := pattern[i]
+		if c == '*' || c == '?' || c == '[' || runtime.GOOS == "windows" && c == '\\' {
+			return true
 		}
 	}
-	return globCharFound
+	return false
 }
 
 //may not always work!!
@@ -105,3 +135,5 @@ func NewOutWriter(outFileName string) (wc io.WriteCloser, err error) {
 	}
 	return wc, nil
 }
+
+

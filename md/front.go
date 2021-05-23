@@ -5,12 +5,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"os"
+	"io/fs"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/drgo/core"
 	"github.com/drgo/core/errors"
 )
 
@@ -20,7 +21,8 @@ type FrontMatter map[string]string
 type ContentFile struct {
 	Path        string
 	FrontMatter FrontMatter
-	Body        string
+	Summary     []byte
+	Body        []byte
 }
 
 // Prop returns the value of the specified front matter entry
@@ -28,14 +30,14 @@ func (p *ContentFile) Prop(name string) string {
 	if val, ok := p.FrontMatter[name]; ok {
 		return val
 	}
-	return "!!! Error= no such property: " + name
+	return "" 
 }
 
 // ParseContentFilesGlob parses markdown-with-front-matter files identified by the pattern
 // The files are matched according to the semantics of filepath.Match, and the pattern
 // must match at least one file. It is equivalent to calling t.ParseContentFiles with the
 // list of files matched by the pattern.
-func ParseContentFilesGlob(pattern string) ([]*ContentFile, error) {
+func ParseContentFilesGlob(fsys fs.FS, pattern string) ([]*ContentFile, error) {
 	filenames, err := filepath.Glob(pattern)
 	if err != nil {
 		return nil, err
@@ -43,17 +45,17 @@ func ParseContentFilesGlob(pattern string) ([]*ContentFile, error) {
 	if len(filenames) == 0 {
 		return nil, errors.Errorf("pattern matches no files: %#q", pattern)
 	}
-	return ParseContentFiles(filenames...)
+	return ParseContentFiles(fsys, filenames...)
 }
 
 // ParseContentFiles pareses markdown-with-front-matter files into a slice of ContentFile pointers
-func ParseContentFiles(filenames ...string) ([]*ContentFile, error) {
+func ParseContentFiles(fsys fs.FS, filenames ...string) ([]*ContentFile, error) {
 	if len(filenames) == 0 {
 		return nil, errors.Errorf("no files named in call to ParseContentFiles")
 	}
 	var lst []*ContentFile
 	for _, filename := range filenames {
-		c, err := ParseContentFile(filename)
+		c, err := ParseContentFile(fsys, filename)
 		if err != nil {
 			return nil, err
 		}
@@ -63,23 +65,26 @@ func ParseContentFiles(filenames ...string) ([]*ContentFile, error) {
 }
 
 // ParseContentFile pareses markdown-with-front-matter files into a ContentFile pointer
-func ParseContentFile(path string) (*ContentFile, error) {
-	r, err := os.Open(path)
+func ParseContentFile(fsys fs.FS, path string) (*ContentFile, error) {
+	r, err := fsys.Open(path)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not parse md file %s", path)
 	}
 	defer r.Close()
-	fm, body, err := ParseFrontMatter(r)
+	cf, err := ParseFrontMatter(r)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not parse md file %s", path)
 	}
-	return &ContentFile{path, fm, string(body)}, err
+	cf.Path= path
+  // fmt.Println("summary:", string(cf.Summary))
+	return cf, nil
 }
 
 var Separator = []byte("+++")
 var ColSeparator = []byte("=")
+var MoreMarker = []byte("<!--more-->")
 
-func ParseFrontMatter(input io.Reader) (fMap map[string]string, body []byte, err error) {
+func ParseFrontMatter(input io.Reader) (*ContentFile, error) {
 	const errmsg = "failed to parse front matter"
 	s := bufio.NewScanner(input)
 	// Necessary so we can handle larger than default 4096b buffer
@@ -87,23 +92,28 @@ func ParseFrontMatter(input io.Reader) (fMap map[string]string, body []byte, err
 	// buf := make([]byte, bufsize)
 	// s.Buffer(buf, bufsize)
 	//the first line should start by a separator
+	var (
+		fMap    map[string]string
+		body    []byte
+		summary []byte
+	)
 	s.Scan()
 	if err := s.Err(); err != nil {
-		return nil, nil, errors.Wrap(err, errmsg)
+		return nil, errors.Wrap(err, errmsg)
 	}
 	fMap = make(map[string]string)
 	if line := s.Bytes(); !bytes.HasPrefix(line, Separator) {
-		return nil, nil, errors.Errorf("%s:%s is not valid separator", errmsg, string(line))
+		return nil, errors.Errorf("%s:file does not start with valid separator [%s]", errmsg, string(line))
 	}
 	// parse the front matter entries in this form: key=value
 	for s.Scan() {
 		line := s.Bytes()
-		if bytes.HasPrefix(line, Separator) { //found second separator
+		if bytes.HasPrefix(line, Separator) { //found second separator, the body starts
 			break
 		}
-		entry := bytes.Split(line, ColSeparator)
+		entry := bytes.SplitN(line, ColSeparator,2)  //split on the first colseparator
 		if len(entry) != 2 {
-			return nil, nil, errors.Errorf("%s:%s is not front matter entry", errmsg, string(line))
+			return nil, errors.Errorf("%s:%s is not front matter entry", errmsg, string(line))
 		}
 		cleaned := strings.TrimSpace(string(entry[1]))
 		val, err := strconv.Unquote(cleaned)
@@ -115,9 +125,21 @@ func ParseFrontMatter(input io.Reader) (fMap map[string]string, body []byte, err
 	}
 	// read the rest of the file into body
 	for s.Scan() {
+		line := s.Bytes()
+		if bytes.HasPrefix(line, MoreMarker) { //found more...
+			summary = append(summary, body...) // move parsed lines to summary
+			body = body[:0]                    //clear the body slice
+			continue                           //ignore the more... line
+		}
 		body = append(body, s.Bytes()...)
+		body = append(body, []byte(core.LineBreak)...)
+		
 	}
-	return fMap, body, s.Err()
+	return &ContentFile{
+		FrontMatter: fMap,
+		Body:        body,
+		Summary:     summary,
+	}, s.Err()
 }
 
 func UnmarshalStringTo(data string, typ interface{}) (err error) {
