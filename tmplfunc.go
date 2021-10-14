@@ -1,5 +1,7 @@
 package core
 
+import "errors"
+
 // Dict useful for passing multiple args to a template function
 // eg {{template "sub" dict "Gophers" .Recent "Current" .User}}
 // src https://play.golang.org/p/oWdPlyWfvG

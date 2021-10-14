@@ -141,6 +141,16 @@ func FileExists(path string) bool {
 	return !info.IsDir()
 }
 
+// DirExists returns true if the given path is an existing directory.
+func DirExists(path string) bool {
+	if pathAbs, err := filepath.Abs(path); err != nil {
+		return false
+	} else if fileInfo, err := os.Stat(pathAbs); os.IsNotExist(err) || !fileInfo.IsDir() {
+		return false
+	}
+	return true
+}
+
 // GetTempFileName returns a temp file name in dir ending with ext.
 func GetTempFileName(dir, ext string) string {
 	if dir == "" {

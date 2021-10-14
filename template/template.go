@@ -26,14 +26,14 @@ func extractUsingPaths(input io.Reader) (files []string, err error) {
 	// parse for custom using comment
 	for s.Scan() {
 		line := strings.TrimSpace(s.Text())
-		fmt.Println("extractUsingPath line=", line)
+		// fmt.Println("extractUsingPath line=", line)
 // strings.TrimLeft(text, " \t\n")
 		if !strings.HasPrefix(line, usingComment) {
 			return files, s.Err()
 		}
 		fileName := strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(line, usingComment), closeComment))
 		// fileName, _ = strconv.Unquote(fileName)
-		fmt.Printf("extractUsingPath found filename:[%s]\n", fileName)
+		// fmt.Printf("extractUsingPath found filename:[%s]\n", fileName)
 		if fileName == "" {
 		  return nil, errors.Errorf("invalid using statement %s", line)
 		}

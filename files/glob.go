@@ -2,8 +2,8 @@ package files
 
 import (
 	"io"
-	"io/ioutil"
 	"io/fs"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -11,7 +11,7 @@ import (
 )
 
 // GlobFS takes a file system and one or more globing pattern and
-// return matched files [could be 0] or nil and error 
+// return matched files [could be 0] or nil and error
 func GlobFS(fsys fs.FS, patterns ...string) ([]string, error) {
 	var filenames []string
 	for _, pattern := range patterns {
@@ -26,23 +26,23 @@ func GlobFS(fsys fs.FS, patterns ...string) ([]string, error) {
 
 // FIXME: use binary search?! See https://github.com/mpvl/unique/blob/cbe035fff7de56b8185768b119ee94a9e42dd938/unique.go#L61
 func Unique(e []string) []string {
-    r := []string{}
+	r := []string{}
 
-    for _, s := range e {
-        if !contains(r[:], s) {
-            r = append(r, s)
-        }
-    }
-    return r
+	for _, s := range e {
+		if !contains(r[:], s) {
+			r = append(r, s)
+		}
+	}
+	return r
 }
 
 func contains(e []string, c string) bool {
-    for _, s := range e {
-        if s == c {
-            return true
-        }
-    }
-    return false
+	for _, s := range e {
+		if s == c {
+			return true
+		}
+	}
+	return false
 }
 
 func ParseWindowsFileArguments(args string) ([]string, error) {
@@ -136,4 +136,17 @@ func NewOutWriter(outFileName string) (wc io.WriteCloser, err error) {
 	return wc, nil
 }
 
-
+// GetSubDirList returns a list of subdirs within a dir
+func GetSubDirList(path string) ([]string, error) {
+	matches, err := os.ReadDir(path)
+	if err != nil {
+		return nil, err
+	}
+	var dirs []string
+	for _, match := range matches {
+		if match.IsDir() {
+			dirs = append(dirs, match.Name())
+		}
+	}
+	return dirs, nil
+}

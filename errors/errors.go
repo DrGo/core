@@ -5,6 +5,7 @@ package errors
 import (
 	"bytes"
 	"encoding/json"
+	goerr "errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -30,6 +31,7 @@ type Diag struct {
 	Op Op `json:"op,omitempty"`
 }
 
+// D creates a new diagnostic struct
 func D(r *http.Request, op string) Diag {
 	return Diag{
 		Path:   r.URL.Path,
@@ -287,9 +289,9 @@ func Errorf(format string, args ...interface{}) error {
 // 	return true
 // }
 
-// Is reports whether err is an *Error of the given Kind.
+// Es reports whether err is an *Error of the given Kind.
 // If err is nil then Is returns false.
-func Is(kind Kind, err error) bool {
+func Es(kind Kind, err error) bool {
 	e, ok := err.(*Error)
 	if !ok {
 		return false
@@ -298,9 +300,13 @@ func Is(kind Kind, err error) bool {
 	// 	return e.Kind == kind
 	// }
 	if e.Err != nil {
-		return Is(kind, e.Err)
+		return Es(kind, e.Err)
 	}
 	return false
+}
+
+func Is(err, target error) bool {
+	return goerr.Is(err, target)
 }
 
 // Recover recovers from panic and send an internalservererror to client
@@ -316,11 +322,10 @@ func Recover(w http.ResponseWriter) {
 // Must if err !=nil it prints the error and exist with rc=1
 func Must(err error) {
 	if err != nil {
-	  os.Stderr.WriteString(err.Error())
+		os.Stderr.WriteString(err.Error())
 		os.Exit(1)
 	}
 }
-
 
 // Wrap returns an error annotating err with a stack trace
 // at the point Wrap is called, and the supplied message.
@@ -396,3 +401,15 @@ func (w *withMessage) Unwrap() error { return w.cause }
 // 		io.WriteString(s, w.Error())
 // 	}
 // }
+// Fatal panics if err != nil
+//FIXME: add more details
+func Fatal(err error) {
+	if err != nil {
+		Crash(err.Error())
+	}
+}
+
+func Crash(msg string) {
+	fmt.Fprintln(os.Stderr, msg)
+	os.Exit(1)
+}
