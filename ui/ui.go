@@ -5,9 +5,10 @@ import (
 	"strings"
 )
 
+type Debug int
 const (
 	//DebugSilent print errors only
-	DebugSilent int = iota
+	DebugSilent Debug = iota
 	//DebugWarning print warnings and errors
 	DebugWarning
 	//DebugUpdates print execution updates, warnings and errors
@@ -15,6 +16,12 @@ const (
 	//DebugAll print internal debug messages, execution updates, warnings and errors
 	DebugAll
 )
+
+func (d Debug) String() string {
+	//[...] creates an array rather than a slice
+	return [...]string{"Off", "Warn", "Info",
+		"All"}[d]
+}
 
 //TODO: add error, errorf and move crash and crashf here
 
@@ -25,18 +32,18 @@ type UI interface {
 	Info(a ...interface{})
 	Infof(format string, a ...interface{})
 	Warn(a ...interface{})
-	Level() int
-	SetLevel(level int)
+	Level() Debug
+	SetLevel(level Debug)
 }
 
 //TODO: add error and log os.File to allow changing output destination (https://github.com/github/hub/tree/master/ui)
 type ui struct {
 	Depth int
-	debug int
+	debug Debug
 }
 
 // NewUI initializes a new default UI
-func NewUI(debug int) UI {
+func NewUI(debug Debug) UI {
 	return &ui{
 		debug: debug,
 	}
@@ -79,10 +86,10 @@ func (u ui) Infof(format string, a ...interface{}) {
 	}
 }
 
-func (u ui) Level() int {
+func (u ui) Level() Debug {
 	return u.debug
 }
 
-func (u *ui) SetLevel(level int) {
+func (u *ui) SetLevel(level Debug) {
 	u.debug = level
 }
