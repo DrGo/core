@@ -1,6 +1,6 @@
 module github.com/drgo/core
 
-go 1.17
+go 1.21
 
 require (
 	github.com/dannyvankooten/extemplate v0.0.0-20210615115643-8f1c15f70e70
