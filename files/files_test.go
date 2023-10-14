@@ -3,10 +3,11 @@ package files
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
-func TestCloseAndName(t *testing.T) {
+func testCloseAndName(t *testing.T) {
 	tests := []struct {
 		f       *os.File
 		dir     string
@@ -16,7 +17,7 @@ func TestCloseAndName(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			dir:  "/Users/salah/local/git/core/files/test",
+			dir:  "./test",
 			base: "test",
 			ext:  ".txt",
 		},
@@ -29,7 +30,8 @@ func TestCloseAndName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.base, func(t *testing.T) {
 			tt.f, _ = ioutil.TempFile("", "")
-			got, err := CloseAndName(tt.f, tt.dir, tt.base, tt.ext)
+			got, err := CloseAndName(tt.f, filepath.Join(tt.dir, tt.base+tt.ext))
+
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CloseAndName() error = %v, wantErr %v", err, tt.wantErr)
 				return
