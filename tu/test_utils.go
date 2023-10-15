@@ -8,22 +8,24 @@ import (
 	"slices"
 )
 
-type Options int 
+type Options int
 
 const (
-	FailNow Options=iota
-	Panic    
-)	
+	FailNow Options = iota
+	Panic
+)
+
+var Debug bool
 
 func Equal[T comparable](t *testing.T, actual, expected T, options ...Options) {
 	t.Helper() //report error in the file that calls this func
 	if expected != actual {
-		const errmsg = "wanted: %v; got: %v"
-		Assert(!slices.Contains(options,Panic), fmt.Sprintf(errmsg, expected, actual))
+		const errmsg = "wanted:%v\ngot:%v\n"
+		Assert(!slices.Contains(options, Panic), fmt.Sprintf(errmsg, expected, actual))
 		t.Errorf(errmsg, expected, actual)
-		if slices.Contains(options, FailNow){
+		if slices.Contains(options, FailNow) {
 			t.FailNow()
-		}	
+		}
 	}
 }
 
@@ -47,16 +49,26 @@ func NotNil(t *testing.T, obj any, options ...Options) {
 	}
 }
 
-
 func Assert(cond bool, msg string) {
 	if !cond {
-		panic("assertion failed: "+ msg)
+		panic("assertion failed: " + msg)
 	}
-}	
+}
 
 func Assertf(cond bool, format string, v ...any) {
 	if cond {
-		return 
+		return
 	}
 	panic(fmt.Sprintf(format, v...))
+}
+
+func P(format string, a ...any) {
+	if Debug {
+		fmt.Printf(format, a...)
+	}
+}
+func PL(a ...any) {
+	if Debug {
+		fmt.Println(a...)
+	}
 }

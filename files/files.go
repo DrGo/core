@@ -5,16 +5,16 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 )
+
 // NameFromParts using a fileName it returns its full path overriding its components
 // as appropriate by dir, baseName and ext if provided; if dir, basename and ext
-// are all empty, it returns f.Name(). if dir="." it returns os.GetWd() + f.Name() 
+// are all empty, it returns f.Name(). if dir="." it returns os.GetWd() + f.Name()
 func NameFromParts(fileName, dir, baseName, ext string) (string, error) {
 	var err error
 	if baseName == "" {
@@ -101,7 +101,7 @@ func GetInputReader(fileName string) (*os.File, error) {
 // a temp file is created and its name is returned
 // FIXME: optimize
 func WriteBufferToFile(fileName string, buf []byte, overWrite bool) (usedFileName string, err error) {
-	file, err := ioutil.TempFile("", "rwtmp") //created in the system default temp folder
+	file, err := os.CreateTemp("", "rwtmp") //created in the system default temp folder
 	if err != nil {
 		return "", err
 	}
@@ -181,7 +181,7 @@ func WriteFile(filename string, data []byte) (err error) {
 // WriteToFile is a variant of WriteFile that accepts the data as an io.Reader
 // instead of a slice.
 func WriteToFile(filename string, data io.Reader) (err error) {
-	f, err := ioutil.TempFile(filepath.Dir(filename), filepath.Base(filename)+patternSuffix)
+	f, err := os.CreateTemp(filepath.Dir(filename), filepath.Base(filename)+patternSuffix)
 	if err != nil {
 		return err
 	}
@@ -231,4 +231,19 @@ func PrintFileStat(path string) error {
 	fmt.Printf("file name=%s\n", path)
 	fmt.Printf("file size=%d\n", fi.Size())
 	return nil
+}
+
+
+func SaveWith(filename string, w func(io.Writer) error) (err error) {
+	f, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		ferr := f.Close()
+		if err == nil {
+			err = ferr
+		}
+	}()
+	return w(f)
 }

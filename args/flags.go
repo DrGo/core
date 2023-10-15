@@ -10,7 +10,7 @@ import (
 
 const errWrongCommand = "must specify a valid command. For a list of commands, type %s help"
 
-//Options stores package run options. If needed, must be set before calling any other package funcs
+// Options stores package run options. If needed, must be set before calling any other package funcs
 type Options struct {
 	// help is the function called when an user requests help.
 	Help func()
@@ -21,12 +21,12 @@ type Options struct {
 
 var opts *Options
 
-//SetOptions sets package run options. If needed, must be called before calling any other package funcs
+// SetOptions sets package run options. If needed, must be called before calling any other package funcs
 func SetOptions(options *Options) {
 	opts = options
 }
 
-//Flag holds command line flag info
+// Flag holds command line flag info
 type Flag struct {
 	dest   interface{}
 	name   string
@@ -43,7 +43,7 @@ func NewFlag(destination interface{}, name, letter string) Flag {
 	}
 }
 
-//NewCommand creates a new command
+// NewCommand creates a new command
 func NewCommand(name string, args []Flag) *flag.FlagSet {
 	cmd := flag.NewFlagSet(name, flag.ContinueOnError)
 	//add duplicate args with both name and letter specified, so the command
@@ -70,8 +70,8 @@ func NewCommand(name string, args []Flag) *flag.FlagSet {
 			cmd.BoolVar(p, arg.name, *p, "")
 		case *int:
 			cmd.IntVar(p, arg.name, *p, "")
-    case *[]string:
-      s := Strings(*p)
+		case *[]string:
+			s := Strings(*p)
 			cmd.Var(&s, arg.name, "")
 		default:
 			continue
@@ -105,9 +105,8 @@ func ParseCommandLine(top *flag.FlagSet, subs ...*flag.FlagSet) (*flag.FlagSet, 
 	return flg, nil
 }
 
-//ParseArguments parses arguments (passed as a string array) for the appropriate subcommand
+// ParseArguments parses arguments (passed as a string array) for the appropriate subcommand
 func ParseArguments(args []string, top *flag.FlagSet, subs ...*flag.FlagSet) (*flag.FlagSet, error) {
-	exeName := os.Args[0]
 	if top == nil {
 		top = flag.NewFlagSet("", flag.ContinueOnError)
 	}
@@ -126,9 +125,10 @@ func ParseArguments(args []string, top *flag.FlagSet, subs ...*flag.FlagSet) (*f
 	}
 	flagSet, found := cmdTable[args[0]] //retrieve the FlagSet for this subcommand
 	if !found {
+		exeName := os.Args[0]
 		return nil, fmt.Errorf("no such command %v. For a list of commands, type %s help", args[0], exeName)
 	}
-	if len(args) == 1 { //nothing left to parse
+	if len(args) == 1 { //only command provided; nothing left to parse
 		return flagSet, nil
 	}
 	args = args[1:] //skip over the subcommand name

@@ -2,13 +2,10 @@
 package core
 
 import (
-	"fmt"
-	"io"
 	"path/filepath"
 	"time"
 
 	"github.com/drgo/core/files"
-	"github.com/drgo/core/mdson"
 )
 
 const defaultDebugLevel = 1
@@ -78,14 +75,14 @@ func (opt *RunOptions) GetTempFileName(prefix, postfix string) string {
 // TODO: clean up following code
 
 //SaveToMDSon saves job configuration to specified MDSon writer
-func (opt *RunOptions) SaveToMDSon(w io.Writer) error {
-	buf, err := mdson.Marshal(opt)
-	if err != nil {
-		return fmt.Errorf("failed to save job configuration: %s", err)
-	}
-	_, err = w.Write(buf)
-	if err != nil {
-		return fmt.Errorf("failed to save job configuration: %s", err)
-	}
-	return nil
-}
+// func (opt *RunOptions) SaveToMDSon(w io.Writer) error {
+// 	buf, err := mdson.Marshal(opt)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to save job configuration: %s", err)
+// 	}
+// 	_, err = w.Write(buf)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to save job configuration: %s", err)
+// 	}
+// 	return nil
+// }

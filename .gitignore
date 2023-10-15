@@ -66,4 +66,5 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 old
+_old
 
